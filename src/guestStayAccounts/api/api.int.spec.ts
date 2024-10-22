@@ -448,6 +448,7 @@ void describe('Guest stay account', () => {
         apis: [
           guestStayAccountsApi(
             eventStore,
+            null!,
             doesGuestStayExist,
             (prefix) => `${prefix}-${transactionId}`,
             () => now,

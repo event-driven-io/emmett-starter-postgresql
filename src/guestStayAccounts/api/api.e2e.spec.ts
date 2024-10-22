@@ -1,5 +1,6 @@
 import {
   formatDateToUtcYYYYMMDD,
+  projections,
   type EventStore,
 } from '@event-driven-io/emmett';
 import {
@@ -13,12 +14,18 @@ import {
   getPostgreSQLEventStore,
   type PostgresEventStore,
 } from '@event-driven-io/emmett-postgresql';
+import { pongoClient, type PongoClient } from '@event-driven-io/pongo';
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import { randomUUID } from 'node:crypto';
 import { after, before, beforeEach, describe, it } from 'node:test';
+import { toGuestStayAccountId } from '../guestStayAccount';
+import {
+  guestStayDetailsProjection,
+  type GuestStayDetails,
+} from '../guestStayDetails';
 import { guestStayAccountsApi } from './api';
 
 const doesGuestStayExist = (_guestId: string, _roomId: string, _day: Date) =>
@@ -35,11 +42,18 @@ void describe('guestStayAccount E2E', () => {
 
   let postgres: StartedPostgreSqlContainer;
   let eventStore: PostgresEventStore;
+  let readStore: PongoClient;
   let given: ApiE2ESpecification;
 
   before(async () => {
     postgres = await new PostgreSqlContainer().start();
-    eventStore = getPostgreSQLEventStore(postgres.getConnectionUri());
+
+    const connectionString = postgres.getConnectionUri();
+
+    eventStore = getPostgreSQLEventStore(connectionString, {
+      projections: projections.inline([guestStayDetailsProjection]),
+    });
+    readStore = pongoClient(connectionString);
 
     given = ApiE2ESpecification.for(
       (): EventStore => eventStore,
@@ -48,6 +62,7 @@ void describe('guestStayAccount E2E', () => {
           apis: [
             guestStayAccountsApi(
               eventStore,
+              readStore.db(),
               doesGuestStayExist,
               (prefix) => `${prefix}-${transactionId}`,
               () => now,
@@ -59,6 +74,7 @@ void describe('guestStayAccount E2E', () => {
 
   after(async () => {
     await eventStore.close();
+    await readStore.close();
     await postgres.stop();
   });
 
@@ -88,6 +104,8 @@ void describe('guestStayAccount E2E', () => {
     request.delete(
       `/guests/${guestId}/stays/${roomId}/periods/${formattedNow}`,
     );
+  const getDetails: TestRequest = (request) =>
+    request.get(`/guests/${guestId}/stays/${roomId}/periods/${formattedNow}`);
 
   void describe('When not existing', () => {
     const notExistingAccount: TestRequest[] = [];
@@ -119,6 +137,11 @@ void describe('guestStayAccount E2E', () => {
       given(...notExistingAccount)
         .when(checkOut)
         .then([expectError(403)]));
+
+    void it(`details return 404`, () =>
+      given(...notExistingAccount)
+        .when(getDetails)
+        .then([expectError(404)]));
   });
 
   void describe('When checked in', () => {
@@ -144,6 +167,24 @@ void describe('guestStayAccount E2E', () => {
         .when(checkOut)
         .then([expectResponse(204)]));
 
+    void it(`details return checked in stay`, () =>
+      given(checkedInAccount)
+        .when(getDetails)
+        .then([
+          expectResponse<GuestStayDetails>(200, {
+            body: {
+              _id: toGuestStayAccountId(guestId, roomId, now),
+              status: 'CheckedIn',
+              balance: 0,
+              roomId,
+              guestId,
+              transactions: [],
+              transactionsCount: 0,
+              checkedInAt: now,
+            },
+          }),
+        ]));
+
     void describe('with unsettled balance', () => {
       const unsettledAccount: TestRequest[] = [checkIn, recordCharge];
 
@@ -167,6 +208,24 @@ void describe('guestStayAccount E2E', () => {
         given(...unsettledAccount)
           .when(checkOut)
           .then([expectError(403)]));
+
+      void it(`details return checked in stay with charge`, () =>
+        given(...unsettledAccount)
+          .when(getDetails)
+          .then([
+            expectResponse(200, {
+              body: {
+                _id: toGuestStayAccountId(guestId, roomId, now),
+                status: 'CheckedIn',
+                balance: -amount,
+                roomId,
+                guestId,
+                transactions: [{ amount }],
+                transactionsCount: 1,
+                checkedInAt: now,
+              },
+            }),
+          ]));
     });
 
     void describe('with settled balance', () => {
@@ -190,6 +249,24 @@ void describe('guestStayAccount E2E', () => {
         given(...settledAccount)
           .when(checkOut)
           .then([expectResponse(204)]));
+
+      void it(`details return checked in stay with charge`, () =>
+        given(...settledAccount)
+          .when(getDetails)
+          .then([
+            expectResponse(200, {
+              body: {
+                _id: toGuestStayAccountId(guestId, roomId, now),
+                status: 'CheckedIn',
+                balance: 0,
+                roomId,
+                guestId,
+                transactions: [{ amount }, { amount }],
+                transactionsCount: 2,
+                checkedInAt: now,
+              },
+            }),
+          ]));
     });
   });
 
@@ -226,5 +303,10 @@ void describe('guestStayAccount E2E', () => {
       given(...checkedOutAccount)
         .when(checkOut)
         .then([expectError(403, { detail: `NotCheckedIn` })]));
+
+    void it(`details return 404`, () =>
+      given(...checkedOutAccount)
+        .when(getDetails)
+        .then([expectResponse(404)]));
   });
 });

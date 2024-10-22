@@ -13,8 +13,10 @@ import {
   NotFound,
   OK,
   on,
+  toWeakETag,
   type WebApiSetup,
 } from '@event-driven-io/emmett-expressjs';
+import { type PongoDb } from '@event-driven-io/pongo';
 import { type Request, type Router } from 'express';
 import {
   checkIn,
@@ -64,6 +66,7 @@ type GetGuestStayAccountDetailsRequest = Request<
 export const guestStayAccountsApi =
   (
     eventStore: EventStore,
+    readStore: PongoDb,
     doesGuestStayExist: (
       guestId: string,
       roomId: string,
@@ -185,17 +188,17 @@ export const guestStayAccountsApi =
       on(async (request: GetGuestStayAccountDetailsRequest) => {
         const guestStayAccountId = parseGuestStayAccountId(request.params);
 
-        const result = await getGuestStayDetails(
-          eventStore,
-          guestStayAccountId,
-        );
+        const result = await getGuestStayDetails(readStore, guestStayAccountId);
 
         if (result === null) return NotFound();
 
-        if (result.state.status !== 'CheckedIn') return NotFound();
+        if (result.status !== 'CheckedIn') return NotFound();
+
+        const { _version, ...document } = result;
 
         return OK({
-          body: result.state,
+          body: document,
+          eTag: toWeakETag(_version),
         });
       }),
     );

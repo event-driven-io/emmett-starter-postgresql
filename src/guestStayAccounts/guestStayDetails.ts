@@ -1,10 +1,11 @@
-import { type EventStore } from '@event-driven-io/emmett';
+import { pongoSingleStreamProjection } from '@event-driven-io/emmett-postgresql';
+import { type PongoDb } from '@event-driven-io/pongo';
 import type { GuestStayAccountEvent } from './guestStayAccount';
 
 export type NotExisting = { status: 'NotExisting' };
 
 export type CheckedIn = {
-  id: string;
+  _id: string;
   guestId: string;
   roomId: string;
   status: 'CheckedIn' | 'CheckedOut';
@@ -13,6 +14,7 @@ export type CheckedIn = {
   transactions: { id: string; amount: number }[];
   checkedInAt: Date;
   checkedOutAt?: Date;
+  _version?: bigint;
 };
 
 export type GuestStayDetails = NotExisting | CheckedIn;
@@ -29,7 +31,7 @@ export const evolve = (
     case 'GuestCheckedIn': {
       return state.status === 'NotExisting'
         ? {
-            id: event.guestStayAccountId,
+            _id: event.guestStayAccountId,
             guestId: event.guestId,
             roomId: event.roomId,
             status: 'CheckedIn',
@@ -85,11 +87,25 @@ export const evolve = (
   }
 };
 
+const guestStayDetailsCollectionName = 'GuestStayDetails';
+
+export const guestStayDetailsProjection = pongoSingleStreamProjection({
+  collectionName: guestStayDetailsCollectionName,
+  evolve,
+  canHandle: [
+    'GuestCheckedIn',
+    'ChargeRecorded',
+    'PaymentRecorded',
+    'GuestCheckedOut',
+    'GuestCheckoutFailed',
+  ],
+  initialState,
+});
+
 export const getGuestStayDetails = (
-  eventStore: EventStore,
+  pongo: PongoDb,
   guestStayAccountId: string,
 ) =>
-  eventStore.aggregateStream(guestStayAccountId, {
-    evolve,
-    initialState,
-  });
+  pongo
+    .collection<GuestStayDetails>(guestStayDetailsCollectionName)
+    .findOne({ _id: guestStayAccountId });
