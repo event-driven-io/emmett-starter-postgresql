@@ -2,7 +2,6 @@ import {
   formatDateToUtcYYYYMMDD,
   type EventStore,
 } from '@event-driven-io/emmett';
-import { getEventStoreDBEventStore } from '@event-driven-io/emmett-esdb';
 import {
   ApiE2ESpecification,
   expectError,
@@ -11,9 +10,13 @@ import {
   type TestRequest,
 } from '@event-driven-io/emmett-expressjs';
 import {
-  EventStoreDBContainer,
-  StartedEventStoreDBContainer,
-} from '@event-driven-io/emmett-testcontainers';
+  getPostgreSQLEventStore,
+  type PostgresEventStore,
+} from '@event-driven-io/emmett-postgresql';
+import {
+  PostgreSqlContainer,
+  type StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
 import { randomUUID } from 'node:crypto';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import { guestStayAccountsApi } from './api';
@@ -30,14 +33,16 @@ void describe('guestStayAccount E2E', () => {
   const amount = Math.random() * 100;
   const transactionId = randomUUID();
 
-  let esdbContainer: StartedEventStoreDBContainer;
+  let postgres: StartedPostgreSqlContainer;
+  let eventStore: PostgresEventStore;
   let given: ApiE2ESpecification;
 
   before(async () => {
-    esdbContainer = await new EventStoreDBContainer().start();
+    postgres = await new PostgreSqlContainer().start();
+    eventStore = getPostgreSQLEventStore(postgres.getConnectionUri());
 
     given = ApiE2ESpecification.for(
-      (): EventStore => getEventStoreDBEventStore(esdbContainer.getClient()),
+      (): EventStore => eventStore,
       (eventStore: EventStore) =>
         getApplication({
           apis: [
@@ -52,8 +57,9 @@ void describe('guestStayAccount E2E', () => {
     );
   });
 
-  after(() => {
-    return esdbContainer.stop();
+  after(async () => {
+    await eventStore.close();
+    await postgres.stop();
   });
 
   beforeEach(() => {

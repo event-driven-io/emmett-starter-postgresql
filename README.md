@@ -2,7 +2,7 @@
 
 ![](./docs/public/logo.png)
 
-# Emmett - template showing event-sourced WebApi with Express.js and EventStoreDB
+# Emmett - template showing event-sourced WebApi with Express.js and PostgreSQL
 
 Read more in [Emmett getting started guide](https://event-driven-io.github.io/emmett/getting-started.html).
 
@@ -16,7 +16,7 @@ npm install
 
 ## Running
 
-Sample require EventStoreDB, you can start it by running
+Sample require PostgreSQL, you can start it by running
 
 ```bash
 docker-compose up

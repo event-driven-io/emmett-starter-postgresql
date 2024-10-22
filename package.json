@@ -1,8 +1,8 @@
 {
-  "name": "expressjs-with-esdb",
+  "name": "expressjs-with-postgresql",
   "version": "1.0.0",
   "type": "module",
-  "description": "Samples WebApi using Event Sourcing using Emmett, Express.js and EventStoreDB ",
+  "description": "Samples WebApi using Event Sourcing using Emmett, Express.js and PostgreSQL ",
   "scripts": {
     "setup": "cat .nvmrc | nvm install; nvm use",
     "build": "tsup",
@@ -38,9 +38,8 @@
   },
   "homepage": "https://github.com/oskardudycz/EventSourcing.NodeJS#readme",
   "dependencies": {
-    "@event-driven-io/emmett-esdb": "0.20.0",
-    "@event-driven-io/emmett-expressjs": "0.20.0",
-    "@event-driven-io/emmett-testcontainers": "0.20.0"
+    "@event-driven-io/emmett-postgresql": "0.20.0",
+    "@event-driven-io/emmett-expressjs": "0.20.0"
   },
   "devDependencies": {
     "@types/node": "20.11.30",
@@ -55,7 +54,8 @@
     "tsconfig-paths": "4.2.0",
     "tsx": "4.7.1",
     "typescript": "5.3.3",
-    "tsup": "8.0.2"
+    "tsup": "8.0.2",
+    "@testcontainers/postgresql": "10.13.2"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

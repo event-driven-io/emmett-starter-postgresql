@@ -1,37 +1,45 @@
-@clientId = dummy
-@productId = dummy
-@unitPrice = 100
+@guestId = dummy
+@roomId = dummy
 
-### Add Product
+### Check In
 
-POST http://localhost:3000/clients/{{clientId}}/shopping-carts/current/product-items HTTP/1.1
+# @name checkin
+POST http://localhost:3000/guests/{{guestId}}/stays/{{roomId}} HTTP/1.1
 content-type: application/json
 
-{
-  "productId": "{{productId}}",
-  "quantity": 10
-}
+### No body passed
+
+### Capture and parse the Location header
+@location = {{checkin.response.headers.Location}}
 
 ### Get State
 
-GET http://localhost:3000/clients/{{clientId}}/shopping-carts/current HTTP/1.1
+GET http://localhost:3000{{location}} HTTP/1.1
 content-type: application/json
 
+### Record Charge
 
-### Remove Product
+@amount = 10
 
-@quantity = 1
-
-DELETE http://localhost:3000/clients/{{clientId}}/shopping-carts/current/product-items?productId={{productId}}&quantity={{quantity}}&unitPrice={{unitPrice}} HTTP/1.1
+POST http://localhost:3000{{location}}/charges HTTP/1.1
 content-type: application/json
 
-### CONFIRM
+{
+  "amount": {{amount}}
+}
 
-POST http://localhost:3000/clients/{{clientId}}/shopping-carts/current/confirm HTTP/1.1
+### Record Payment
+
+@amount = 10
+
+POST http://localhost:3000{{location}}/payments HTTP/1.1
 content-type: application/json
 
+{
+  "amount": {{amount}}
+}
 
-### Cancel
+### Checkout
 
-POST http://localhost:3000/clients/{{clientId}}/shopping-carts/current HTTP/1.1
+DELETE http://localhost:3000{{location}} HTTP/1.1
 content-type: application/json
