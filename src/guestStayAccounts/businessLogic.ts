@@ -54,8 +54,11 @@ export type GuestStayCommand =
 export const checkIn = (
   { data: { guestId, roomId }, metadata }: CheckIn,
   state: GuestStayAccount,
-): GuestCheckedIn => {
-  assertDoesNotExist(state);
+): GuestCheckedIn | [] => {
+  if (state.status === 'CheckedIn') [];
+
+  if (state.status === 'CheckedOut')
+    throw new IllegalStateError(`Guest account is already checked out`);
 
   const now = metadata?.now ?? new Date();
 
@@ -107,7 +110,9 @@ export const recordPayment = (
 export const checkOut = (
   { data: { guestStayAccountId, groupCheckoutId }, metadata }: CheckOut,
   state: GuestStayAccount,
-): GuestCheckedOut | GuestCheckoutFailed => {
+): GuestCheckedOut | GuestCheckoutFailed | [] => {
+  if (state.status === 'CheckedOut') return [];
+
   const now = metadata?.now ?? new Date();
 
   if (state.status !== 'CheckedIn')
@@ -146,7 +151,7 @@ export const checkOut = (
 export const decide = (
   command: GuestStayCommand,
   state: GuestStayAccount,
-): GuestStayAccountEvent => {
+): GuestStayAccountEvent | GuestStayAccountEvent[] => {
   const { type } = command;
 
   switch (type) {
@@ -163,16 +168,6 @@ export const decide = (
       throw new Error(`Unknown command type`);
     }
   }
-};
-
-const assertDoesNotExist = (state: GuestStayAccount): state is CheckedIn => {
-  if (state.status === 'CheckedIn')
-    throw new IllegalStateError(`Guest is already checked-in!`);
-
-  if (state.status === 'CheckedOut')
-    throw new IllegalStateError(`Guest account is already checked out`);
-
-  return true;
 };
 
 const assertIsCheckedIn = (state: GuestStayAccount): state is CheckedIn => {
