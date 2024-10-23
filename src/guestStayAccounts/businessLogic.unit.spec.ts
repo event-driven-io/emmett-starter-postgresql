@@ -121,7 +121,7 @@ void describe('Guest Stay Account', () => {
       },
     ];
 
-    void it(`doesn't check in`, () =>
+    void it(`ignores check in`, () =>
       given(checkedInAccount)
         .when({
           type: 'CheckIn',
@@ -131,9 +131,7 @@ void describe('Guest Stay Account', () => {
           },
           metadata: { now },
         })
-        .thenThrows<IllegalStateError>(
-          (error) => error.message === `Guest is already checked-in!`,
-        ));
+        .then([]));
 
     void it('records charge', () => {
       given(checkedInAccount)
@@ -476,7 +474,7 @@ void describe('Guest Stay Account', () => {
           (error) => error.message === `Guest account is already checked out`,
         ));
 
-    void it(`doesn't checkout`, () =>
+    void it(`ignores check out`, () =>
       given(checkedOutAccount)
         .when({
           type: 'CheckOut',
@@ -485,16 +483,6 @@ void describe('Guest Stay Account', () => {
           },
           metadata: { now },
         })
-        .then([
-          {
-            type: 'GuestCheckoutFailed',
-            data: {
-              guestStayAccountId,
-              groupCheckoutId: undefined,
-              reason: 'NotCheckedIn',
-              failedAt: now,
-            },
-          },
-        ]));
+        .then([]));
   });
 });

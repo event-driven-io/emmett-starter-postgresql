@@ -126,10 +126,8 @@ void describe('Guest stay account', () => {
         ])),
     );
 
-    void it(`doesn't check in`, () =>
-      given(checkedInAccount)
-        .when(checkIn)
-        .then(expectError(403, { detail: `Guest is already checked-in!` })));
+    void it(`ingores check in`, () =>
+      given(checkedInAccount).when(checkIn).then(expectResponse(201)));
 
     void it('records charge', () =>
       given(checkedInAccount)
@@ -422,23 +420,10 @@ void describe('Guest stay account', () => {
           expectError(403, { detail: `Guest account is already checked out` }),
         ));
 
-    void it(`doesn't checkout`, () =>
+    void it(`ignores check out`, () =>
       given(checkedOutAccount)
         .when(checkOut)
-        .then([
-          expectError(403, { detail: `NotCheckedIn` }),
-          expectNewEvents(guestStayAccountId, [
-            {
-              type: 'GuestCheckoutFailed',
-              data: {
-                guestStayAccountId,
-                groupCheckoutId: undefined,
-                reason: 'NotCheckedIn',
-                failedAt: now,
-              },
-            },
-          ]),
-        ]));
+        .then([expectResponse(204)]));
   });
 
   const given = ApiSpecification.for<GuestStayAccountEvent>(

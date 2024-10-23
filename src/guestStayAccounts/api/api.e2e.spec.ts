@@ -147,10 +147,10 @@ void describe('guestStayAccount E2E', () => {
   void describe('When checked in', () => {
     const checkedInAccount: TestRequest = checkIn;
 
-    void it(`doesn't check in`, () =>
+    void it(`ignores check in`, () =>
       given(checkedInAccount)
         .when(checkIn)
-        .then([expectError(403, { detail: `Guest is already checked-in!` })]));
+        .then([expectResponse(201)]));
 
     void it('records charge', () =>
       given(checkedInAccount)
@@ -299,10 +299,10 @@ void describe('guestStayAccount E2E', () => {
           expectError(403, { detail: `Guest account is already checked out` }),
         ]));
 
-    void it(`doesn't checkout`, () =>
+    void it(`ignores checkout`, () =>
       given(...checkedOutAccount)
         .when(checkOut)
-        .then([expectError(403, { detail: `NotCheckedIn` })]));
+        .then([expectResponse(204)]));
 
     void it(`details return 404`, () =>
       given(...checkedOutAccount)

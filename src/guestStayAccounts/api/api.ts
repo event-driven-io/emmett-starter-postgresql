@@ -168,16 +168,17 @@ export const guestStayAccountsApi =
           metadata: { now: getCurrentTime() },
         };
 
-        const {
-          newEvents: [event],
-        } = await handle(eventStore, guestStayAccountId, (state) =>
-          checkOut(command, state),
+        const { newEvents } = await handle(
+          eventStore,
+          guestStayAccountId,
+          (state) => checkOut(command, state),
         );
 
-        return event.type !== 'GuestCheckoutFailed'
+        return newEvents.length === 0 ||
+          newEvents[0].type !== 'GuestCheckoutFailed'
           ? NoContent()
           : Forbidden({
-              problemDetails: event.data.reason,
+              problemDetails: newEvents[0].data.reason,
             });
       }),
     );
