@@ -1,10 +1,11 @@
+version: '3.5'
+
 services:
   app:
     build:
       # use local image
       dockerfile: Dockerfile
       context: .
-    platform: linux/amd64
     container_name: emmett_api
     profiles: [app]
     environment:

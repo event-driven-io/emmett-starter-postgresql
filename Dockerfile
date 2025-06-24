@@ -17,8 +17,7 @@ COPY ./tsup.config.ts ./
 # install node modules
 # use `npm ci` instead of `npm install`
 # to install exact version from `package-lock.json`
-# Clear npm cache and remove node_modules to avoid platform-specific issues
-RUN npm ci --prefer-offline --no-audit
+RUN npm ci
 
 # Copy project files
 COPY src ./src
