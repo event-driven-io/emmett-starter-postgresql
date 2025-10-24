@@ -9,10 +9,11 @@ import { guestStayDetailsProjection } from './guestStayAccounts/guestStayDetails
 
 const connectionString =
   process.env.POSTGRESQL_CONNECTION_STRING ??
-  'postgresql://postgres@localhost:5432/postgres';
+  'postgresql://postgres:postgres@localhost:5432/postgres';
 
 const eventStore = getPostgreSQLEventStore(connectionString, {
   projections: projections.inline([guestStayDetailsProjection]),
+  schema: { autoMigration: 'None' },
 });
 
 const readStore = pongoClient(connectionString);
@@ -32,4 +33,8 @@ const application: Application = getApplication({
   apis: [guestStayAccounts],
 });
 
-startAPI(application);
+startAPI(application).on('listening', async () => {
+  eventStore.schema.print();
+  await eventStore.schema.migrate();
+  console.log('Migrations complete.');
+});

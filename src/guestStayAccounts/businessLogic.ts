@@ -55,7 +55,7 @@ export const checkIn = (
   { data: { guestId, roomId }, metadata }: CheckIn,
   state: GuestStayAccount,
 ): GuestCheckedIn | [] => {
-  if (state.status === 'CheckedIn') [];
+  if (state.status === 'CheckedIn') return [];
 
   if (state.status === 'CheckedOut')
     throw new IllegalStateError(`Guest account is already checked out`);
