@@ -38,8 +38,8 @@
   },
   "homepage": "https://github.com/oskardudycz/EventSourcing.NodeJS#readme",
   "dependencies": {
-    "@event-driven-io/emmett-postgresql": "0.39.0",
-    "@event-driven-io/emmett-expressjs": "0.39.0"
+    "@event-driven-io/emmett-postgresql": "0.41.0",
+    "@event-driven-io/emmett-expressjs": "0.41.0"
   },
   "devDependencies": {
     "@types/node": "20.11.30",
