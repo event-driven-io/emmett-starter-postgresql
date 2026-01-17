@@ -57,6 +57,9 @@
     "tsup": "8.0.2",
     "@testcontainers/postgresql": "10.13.2"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-arm64-musl": "^4.0.0"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
