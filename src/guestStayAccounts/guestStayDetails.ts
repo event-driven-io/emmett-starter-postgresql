@@ -1,5 +1,5 @@
 import { pongoSingleStreamProjection } from '@event-driven-io/emmett-postgresql';
-import { type PongoDb } from '@event-driven-io/pongo';
+import type { PongoDb } from '@event-driven-io/pongo';
 import type { GuestStayAccountEvent } from './guestStayAccount';
 
 export type NotExisting = { status: 'NotExisting' };

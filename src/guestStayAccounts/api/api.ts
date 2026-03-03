@@ -16,8 +16,8 @@ import {
   toWeakETag,
   type WebApiSetup,
 } from '@event-driven-io/emmett-expressjs';
-import { type PongoDb } from '@event-driven-io/pongo';
-import { type Request, type Router } from 'express';
+import type { PongoDb } from '@event-driven-io/pongo';
+import type { Request, Router } from 'express';
 import {
   checkIn,
   checkOut,
@@ -119,6 +119,7 @@ export const guestStayAccountsApi =
           data: {
             chargeId: generateId('charge'),
             guestStayAccountId,
+
             amount: assertPositiveNumber(Number(request.body.amount)),
           },
           metadata: { now: getCurrentTime() },
@@ -143,6 +144,7 @@ export const guestStayAccountsApi =
           data: {
             paymentId: generateId('payment'),
             guestStayAccountId,
+
             amount: assertPositiveNumber(Number(request.body.amount)),
           },
           metadata: { now: getCurrentTime() },
@@ -175,10 +177,10 @@ export const guestStayAccountsApi =
         );
 
         return newEvents.length === 0 ||
-          newEvents[0].type !== 'GuestCheckoutFailed'
+          newEvents[0]!.type !== 'GuestCheckoutFailed'
           ? NoContent()
           : Forbidden({
-              problemDetails: newEvents[0].data.reason,
+              problemDetails: newEvents[0]!.data.reason,
             });
       }),
     );

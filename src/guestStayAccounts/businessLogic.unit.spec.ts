@@ -1,7 +1,5 @@
-import {
-  DeciderSpecification,
-  IllegalStateError,
-} from '@event-driven-io/emmett';
+import type { IllegalStateError } from '@event-driven-io/emmett';
+import { DeciderSpecification } from '@event-driven-io/emmett';
 import { randomUUID } from 'node:crypto';
 import { describe, it } from 'node:test';
 import { decide } from './businessLogic';

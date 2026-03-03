@@ -15,6 +15,7 @@ import {
   type PostgresEventStore,
 } from '@event-driven-io/emmett-postgresql';
 import { pongoClient, type PongoClient } from '@event-driven-io/pongo';
+import { pongoDriver } from '@event-driven-io/pongo/pg';
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
@@ -46,14 +47,14 @@ void describe('guestStayAccount E2E', () => {
   let given: ApiE2ESpecification;
 
   before(async () => {
-    postgres = await new PostgreSqlContainer().start();
+    postgres = await new PostgreSqlContainer('postgres:18.1').start();
 
     const connectionString = postgres.getConnectionUri();
 
     eventStore = getPostgreSQLEventStore(connectionString, {
       projections: projections.inline([guestStayDetailsProjection]),
     });
-    readStore = pongoClient(connectionString);
+    readStore = pongoClient({ driver: pongoDriver, connectionString });
 
     given = ApiE2ESpecification.for(
       (): EventStore => eventStore,

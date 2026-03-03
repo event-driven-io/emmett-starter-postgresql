@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import type { Application } from 'express';
 import { guestStayAccountsApi } from './guestStayAccounts/api/api';
 import { guestStayDetailsProjection } from './guestStayAccounts/guestStayDetails';
+import { pongoDriver } from '@event-driven-io/pongo/pg';
 
 const connectionString =
   process.env.POSTGRESQL_CONNECTION_STRING ??
@@ -16,7 +17,7 @@ const eventStore = getPostgreSQLEventStore(connectionString, {
   schema: { autoMigration: 'None' },
 });
 
-const readStore = pongoClient(connectionString);
+const readStore = pongoClient({ driver: pongoDriver, connectionString });
 
 const doesGuestStayExist = (_guestId: string, _roomId: string, _day: Date) =>
   Promise.resolve(true);
